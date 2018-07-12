@@ -38,16 +38,18 @@ omega_real = 0
 d_omega_real = 0
 omega_target = 5
 omega_error = 0.
-kp = 0.2#Tm / (Tz * k_motor)
-ki = 2.9 * 3#* numpy.sqrt(4)#1.0 / (Tz * k_motor)
-kd = 0.0015
+kp = 0.8#Tm / (Tz * k_motor)
+ki = 8#2.9 #* numpy.sqrt(4)#1.0 / (Tz * k_motor)
+kd = 0.0
+kforward = 4
 for i in range(120):
 	if i > 60:
-		omega_target = -5
-
-	#omega -= pressure_i
+		pressure_i = 4
+	else:
+		pressure_i = 0
+	omega -= pressure_i
 	omega_real_ar.append(omega_real)
-	#omega_pressure.append(pressure_i)
+	omega_pressure.append(pressure_i)
 	
 	omega_error = omega_target - omega_real;
 	
@@ -55,7 +57,7 @@ for i in range(120):
 	diff = (omega_error - prev_omega_error) / dt
 	prev_omega_error = omega_error
 	u_dt.append(u)
-	u = kp*omega_error + kd*diff + ki*integral
+	u = kp*omega_error + kd*diff + ki*integral + kforward * omega_target
 	#u = 24.2/4
 	d_omega = (dt / Tm) * (k_motor * u - omega)
 	omega += d_omega
@@ -63,21 +65,21 @@ for i in range(120):
 	if omega < betta:
 		omega_real = 0
 	else:
-	d_omega_real = (dt / 0.051) * (omega - omega_real - betta)
-	omega_real += d_omega_real
+		d_omega_real = (dt / 0.051) * (omega - omega_real - betta)
+		omega_real += d_omega_real
 
 
 plt.figure(0)
 time = np.arange(0, 0.05 * 120, 0.05)
 plt.plot(time, u_dt,label = "voltage")
-#plt.plot(time, omega_pressure*1,label = "pressure")
+plt.plot(time, omega_pressure,label = "pressure")
 plt.plot(time, omega_real_ar,label = "omega real")
 
 plt.legend()
 pwm_dt = np.asarray(u_dt)
 pwm_dt = pwm_dt*41
-plt.figure(1)
-time = np.arange(0, 0.05 * 120, 0.05)
+#plt.figure(1)
+#time = np.arange(0, 0.05 * 120, 0.05)
 #plt.plot(time, pwm_dt,label = "stm pwm")
 #plt.plot(time, omega_from_sensor,'-o',label='omega_from_sensor (radian / sec)')
 
